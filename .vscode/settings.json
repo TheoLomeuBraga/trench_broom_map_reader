@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "trench_broom_map_reader_brut.h": "c",
+        "string.h": "c"
+    }
+}
