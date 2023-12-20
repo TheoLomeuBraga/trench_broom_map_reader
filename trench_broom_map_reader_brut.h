@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,8 +7,8 @@
 // basics
 typedef struct
 {
-    void **data;
     size_t size;
+    void **data;
 } simple_vector;
 
 typedef struct
