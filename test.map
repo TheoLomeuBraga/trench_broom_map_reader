@@ -3,6 +3,7 @@
 "classname" "worldspawn"
 "wad" "E:\q1maps\Q.wad"
 {
+"spawnflags" "0"
 ( 256 64 16 ) ( 256 64 0 ) ( 256 0 16 ) mmetal1_2 0 0 0 1.0 1.0
 ( 0 0 0 ) ( 0 64 0 ) ( 0 0 16 ) mmetal1_2 0 0 0 1.0 1.0
 ( 64 256 16 ) ( 0 256 16 ) ( 64 256 0 ) mmetal1_2 0 0 0 1.0 1.0
