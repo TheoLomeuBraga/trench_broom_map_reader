@@ -187,14 +187,24 @@ simple_vector load_primitive_map_entitys(FILE *file)
 
     char line[256];
 
+    char skip = 0;
     while (fgets(line, sizeof(line), file) != NULL)
     {
         if (strstr(line, "}")) // Check for the end of the entities section
         {
-            break;
+            if (skip == 0)
+            {
+                continue;
+                skip++;
+            }
+            else
+            {
+                break;
+            }
         }
 
-        if (is_primitive_entity(line))
+        // Check if it is an entity or a property
+        if (is_primitive_entity(line) || is_map_propriety(line))
         {
             PrimitiveMapEntity *entity = malloc(sizeof(PrimitiveMapEntity));
             if (!entity)
@@ -211,18 +221,29 @@ simple_vector load_primitive_map_entitys(FILE *file)
             entity->aditionalInfo.data = NULL;
             entity->aditionalInfo.size = 0;
 
-            // Process the current line
-            PrimitiveMapStructurePrimitive *primitive = read_primitive_map_propriety(line);
-            if (primitive)
+            // Process the current line based on its type
+            if (is_primitive_entity(line))
             {
-                entity->primitives.data = realloc(entity->primitives.data, sizeof(PrimitiveMapStructurePrimitive *) * (entity->primitives.size + 1));
-                entity->primitives.data[entity->primitives.size++] = primitive;
-                //printf("%d",entity->primitives.size);printf(line);
+                PrimitiveMapStructurePrimitive *primitive = read_primitive_map_propriety(line);
+                if (primitive)
+                {
+                    entity->primitives.data = realloc(entity->primitives.data, sizeof(PrimitiveMapStructurePrimitive *) * (entity->primitives.size + 1));
+                    entity->primitives.data[entity->primitives.size++] = primitive;
+                }
+                else
+                {
+                    fprintf(stderr, "Error parsing PrimitiveMapStructurePrimitive from line: %s", line);
+                    // Handle parsing failure if needed
+                }
             }
-            else
+            else if (is_map_propriety(line))
             {
-                fprintf(stderr, "Error parsing PrimitiveMapStructurePrimitive from line: %s", line);
-                // Handle parsing failure if needed
+                MapPropriety *prop = read_map_propriety(line);
+                if (prop)
+                {
+                    entity->aditionalInfo.data = realloc(entity->aditionalInfo.data, sizeof(MapPropriety *) * (entity->aditionalInfo.size + 1));
+                    entity->aditionalInfo.data[entity->aditionalInfo.size++] = prop;
+                }
             }
 
             // Continue reading the file for either PrimitiveMapStructurePrimitive or MapPropriety
@@ -233,30 +254,31 @@ simple_vector load_primitive_map_entitys(FILE *file)
                     break;
                 }
 
-                if (is_primitive_entity(line))
+                // Check if it is an entity or a property
+                if (is_primitive_entity(line) || is_map_propriety(line))
                 {
-                    primitive = read_primitive_map_propriety(line);
-                    if (primitive)
+                    if (is_primitive_entity(line))
                     {
-                        entity->primitives.data = realloc(entity->primitives.data, sizeof(PrimitiveMapStructurePrimitive *) * (entity->primitives.size + 1));
-                        entity->primitives.data[entity->primitives.size++] = primitive;
-                        //printf("%d",entity->primitives.size);printf(line);
+                        PrimitiveMapStructurePrimitive *primitive = read_primitive_map_propriety(line);
+                        if (primitive)
+                        {
+                            entity->primitives.data = realloc(entity->primitives.data, sizeof(PrimitiveMapStructurePrimitive *) * (entity->primitives.size + 1));
+                            entity->primitives.data[entity->primitives.size++] = primitive;
+                        }
+                        else
+                        {
+                            fprintf(stderr, "Error parsing PrimitiveMapStructurePrimitive from line: %s", line);
+                            // Handle parsing failure if needed
+                        }
                     }
-                    else
+                    else if (is_map_propriety(line))
                     {
-                        fprintf(stderr, "Error parsing PrimitiveMapStructurePrimitive from line: %s", line);
-                        // Handle parsing failure if needed
-                    }
-                }
-                else if (is_map_propriety(line))
-                {
-                    // Using read_map_propriety to directly extract quoted strings
-                    MapPropriety *prop = read_map_propriety(line);
-                    if (prop)
-                    {
-                        entity->aditionalInfo.data = realloc(entity->aditionalInfo.data, sizeof(MapPropriety *) * (entity->aditionalInfo.size + 1));
-                        entity->aditionalInfo.data[entity->aditionalInfo.size++] = prop;
-                        
+                        MapPropriety *prop = read_map_propriety(line);
+                        if (prop)
+                        {
+                            entity->aditionalInfo.data = realloc(entity->aditionalInfo.data, sizeof(MapPropriety *) * (entity->aditionalInfo.size + 1));
+                            entity->aditionalInfo.data[entity->aditionalInfo.size++] = prop;
+                        }
                     }
                 }
             }
