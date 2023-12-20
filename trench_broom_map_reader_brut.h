@@ -49,7 +49,7 @@ typedef struct
 typedef struct
 {
 
-    PrimitiveMapStructurePrimitive primitives;
+    simple_vector primitives;
     simple_vector aditionalInfo;
 
 } PrimitiveMapEntity;
