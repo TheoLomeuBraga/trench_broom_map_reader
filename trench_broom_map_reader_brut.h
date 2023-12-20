@@ -412,7 +412,7 @@ void print_primitive_map_content(PrimitiveMap *map)
     printf("    entitys {\n");
 
     i = 0;
-    while (i < map->entitys.size)
+    while (0)//i < map->entitys.size)
     {
         PrimitiveMapEntity *ent = map->entitys.data[i];
         printf("        {\n");
