@@ -22,8 +22,8 @@ typedef struct
     int offsetX;
     int offsetY;
     int rotation;
-    int scaleX;
-    int scaleY;
+    float scaleX;
+    float scaleY;
 
 } PrimitiveTextureCoord;
 
@@ -149,14 +149,14 @@ PrimitiveMapStructurePrimitive *read_primitive_map_propriety(const char *data)
     }
 
     // Attempt to decode the input string
-    int parsed = sscanf(data, "( %d %d %d ) ( %d %d %d ) ( %d %d %d ) %ms %d %d %d %d %d",
+    int parsed = sscanf(data, "( %d %d %d ) ( %d %d %d ) ( %d %d %d ) %ms %d %d %d %f %f",
                         &primitive->positions[0].x, &primitive->positions[0].y, &primitive->positions[0].z,
                         &primitive->positions[1].x, &primitive->positions[1].y, &primitive->positions[1].z,
                         &primitive->positions[2].x, &primitive->positions[2].y, &primitive->positions[2].z,
                         &primitive->texture,
                         &primitive->textureCord.offsetX, &primitive->textureCord.offsetY,
                         &primitive->textureCord.rotation, &primitive->textureCord.scaleX, &primitive->textureCord.scaleY);
-
+    
     if (parsed != 15)
     {
         // If parsing is unsuccessful, free allocated memory and return NULL
@@ -387,7 +387,7 @@ void print_primitives(unsigned char spaces,simple_vector components){
             printf("    ");
         }
         PrimitiveMapStructurePrimitive * primitive = (PrimitiveMapStructurePrimitive*)components.data[i];
-        printf("( %d %d %d ) ( %d %d %d ) ( %d %d %d ) %s %d %d %d %d %d\n",
+        printf("( %d %d %d ) ( %d %d %d ) ( %d %d %d ) %s %d %d %d %f %f\n",
                         primitive->positions[0].x, primitive->positions[0].y, primitive->positions[0].z,
                         primitive->positions[1].x, primitive->positions[1].y, primitive->positions[1].z,
                         primitive->positions[2].x, primitive->positions[2].y, primitive->positions[2].z,
@@ -412,7 +412,7 @@ void print_primitive_map_content(PrimitiveMap *map)
     printf("    entitys {\n");
 
     i = 0;
-    while (0)//i < map->entitys.size)
+    while (i < map->entitys.size)
     {
         PrimitiveMapEntity *ent = map->entitys.data[i];
         printf("        {\n");
