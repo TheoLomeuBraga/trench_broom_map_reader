@@ -176,6 +176,76 @@ simple_vector primitiveEntitys_to_simpleEntitys(simple_vector primitiveEntitys)
 }
 
 
+
+void delete_simple_entity(SimpleEntity *entity)
+{
+    // Libera a memória da simple_vector triangles
+    for (size_t i = 0; i < entity->triangles.size; i++)
+    {
+        SimpleTriangle *triangle = (SimpleTriangle *)entity->triangles.data[i];
+        // Libera a memória da string 'texture'
+        free((void *)triangle->texture);
+        free(triangle);
+    }
+    free(entity->triangles.data);
+
+    // Libera a memória da simple_vector aditionalInfo
+    for (size_t i = 0; i < entity->aditionalInfo.size; i++)
+    {
+        MapPropriety *prop = (MapPropriety *)entity->aditionalInfo.data[i];
+        // Libera a memória da chave e dos dados
+        free((void *)prop->key);
+        free((void *)prop->data);
+        free(prop);
+    }
+    free(entity->aditionalInfo.data);
+
+    // Libera a memória da própria estrutura SimpleEntity
+    free(entity);
+}
+
+
+void delete_simple_map(SimpleMap *map)
+{
+    // Libera a memória da string 'path'
+    free((void *)map->path);
+
+    // Libera a memória da simple_vector entitys
+    for (size_t i = 0; i < map->entitys.size; i++)
+    {
+        SimpleEntity *entity = (SimpleEntity *)map->entitys.data[i];
+        // Chama a função de deletar para cada entidade
+        delete_simple_entity(entity);
+    }
+    free(map->entitys.data);
+
+    // Libera a memória da simple_vector aditionalInfo
+    for (size_t i = 0; i < map->aditionalInfo.size; i++)
+    {
+        MapPropriety *prop = (MapPropriety *)map->aditionalInfo.data[i];
+        // Libera a memória da chave e dos dados
+        free((void *)prop->key);
+        free((void *)prop->data);
+        free(prop);
+    }
+    free(map->aditionalInfo.data);
+
+    // Libera a memória da própria estrutura SimpleMap
+    free(map);
+}
+
+void print_simple_triangles(unsigned char spaces , simple_vector triangles){
+    for(size_t i = 0 ; i < triangles.size;i++){
+        for (size_t a = 0; a < spaces; a++)
+        {
+            printf("    ");
+        }
+        SimpleTriangle *st = ((SimpleTriangle*)triangles.data[i]);
+        printf("texture: %s\n",st->texture);
+    }
+}
+
+
 void print_simple_map_content(SimpleMap *map)
 {
     printf("%s {\n", map->path);
@@ -196,7 +266,7 @@ void print_simple_map_content(SimpleMap *map)
         SimpleEntity *ent = map->entitys.data[i];
         printf("        {\n");
         print_components(3,ent->aditionalInfo);
-        
+        print_components(3,ent->triangles);
         printf("        }\n");
         
         i++;
@@ -221,7 +291,7 @@ SimpleMap *load_simple_map(const char *path)
     map->entitys = primitiveEntitys_to_simpleEntitys(pmap->entitys);
     
 
-    print_simple_map_content(map);
+    
 
     delete_primitive_map(pmap);
 

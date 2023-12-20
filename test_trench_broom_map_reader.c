@@ -5,10 +5,12 @@
 int main(int argc, char **argv){
 
     if(argc == 2){
-        
+
         printf("hello trenchbroom map\n");
 
-        load_simple_map(argv[1]);
+        SimpleMap *sm = load_simple_map(argv[1]);
+        print_simple_map_content(sm);
+        delete_simple_map(sm);
 
     }else{
         printf("please specify the map file\n");
