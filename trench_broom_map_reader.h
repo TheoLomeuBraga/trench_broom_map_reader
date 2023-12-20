@@ -104,22 +104,6 @@ typedef struct
 
 } SimpleMap;
 
-simple_vector primitives_to_triangles(simple_vector primitives){
-    simple_vector ret;
-    ret.size = 0;
-    ret.data = 0;
-
-    return ret;
-}
-
-simple_vector primitiveEntitys_to_simpleEntitys(simple_vector primitives){
-    simple_vector ret;
-    ret.size = 0;
-    ret.data = 0;
-
-    return ret;
-}
-
 simple_vector copy_simple_vector(simple_vector *source)
 {
     simple_vector destination;
@@ -147,6 +131,50 @@ simple_vector copy_simple_vector(simple_vector *source)
 
     return destination;
 }
+
+
+simple_vector primitivesShapes_to_triangles(simple_vector primitivesShapes){
+    simple_vector ret;
+    ret.size = 0;
+    ret.data = 0;
+
+    return ret;
+}
+
+SimpleEntity primitiveEntity_to_simpleEntity(PrimitiveMapEntity primitiveEntity){
+    SimpleEntity ret;
+    ret.aditionalInfo = copy_simple_vector(&primitiveEntity.aditionalInfo);
+    ret.triangles = primitivesShapes_to_triangles(primitiveEntity.primitives);
+    return ret;
+}
+
+simple_vector primitiveEntitys_to_simpleEntitys(simple_vector primitiveEntitys)
+{
+    simple_vector ret;
+    ret.size = 0;
+    ret.data = NULL;
+
+    // Converte entidades primitivas em entidades simples
+    for (size_t i = 0; i < primitiveEntitys.size; i++)
+    {
+        SimpleEntity *simpleEntity = malloc(sizeof(SimpleEntity));
+        if (!simpleEntity)
+        {
+            fprintf(stderr, "Error allocating memory for SimpleEntity\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // Usa a função auxiliar para converter entidade primitiva em entidade simples
+        *simpleEntity = primitiveEntity_to_simpleEntity(*((PrimitiveMapEntity *)primitiveEntitys.data[i]));
+
+        // Adiciona a entidade simples ao vetor
+        ret.data = realloc(ret.data, sizeof(void *) * (ret.size + 1));
+        ret.data[ret.size++] = simpleEntity;
+    }
+
+    return ret;
+}
+
 
 void print_simple_map_content(SimpleMap *map)
 {
@@ -190,6 +218,7 @@ SimpleMap *load_simple_map(const char *path)
 
     map->path = strdup(path);
     map->aditionalInfo = copy_simple_vector(&pmap->aditionalInfo);
+    map->entitys = primitiveEntitys_to_simpleEntitys(pmap->entitys);
     
 
     print_simple_map_content(map);
