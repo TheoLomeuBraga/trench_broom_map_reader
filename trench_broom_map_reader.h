@@ -112,6 +112,14 @@ simple_vector primitives_to_triangles(simple_vector primitives){
     return ret;
 }
 
+simple_vector primitiveEntitys_to_simpleEntitys(simple_vector primitives){
+    simple_vector ret;
+    ret.size = 0;
+    ret.data = 0;
+
+    return ret;
+}
+
 simple_vector copy_simple_vector(simple_vector *source)
 {
     simple_vector destination;
