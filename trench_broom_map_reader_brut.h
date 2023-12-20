@@ -39,7 +39,7 @@ typedef struct
 {
 
     PrimitiveCoord positions[3];
-    char *texture;
+    const char *texture;
     PrimitiveTextureCoord textureCord;
 
 } PrimitiveMapStructurePrimitive;
@@ -115,8 +115,8 @@ simple_vector load_primitive_map_aditionalInfo(FILE *file)
         {
             if (first_element_skip == 0)
             {
-                continue;
                 first_element_skip++;
+                continue;
             }
             else
             {
@@ -160,7 +160,6 @@ PrimitiveMapStructurePrimitive *read_primitive_map_propriety(const char *data)
     if (parsed != 15)
     {
         // If parsing is unsuccessful, free allocated memory and return NULL
-        free(primitive->texture);
         free(primitive);
         return NULL;
     }
@@ -187,7 +186,8 @@ simple_vector load_primitive_map_entitys(FILE *file)
 
     char line[256];
 
-    char skip = 0;
+    unsigned char skip = 0;
+    unsigned char skipAditionalInfo = 0;
     while (fgets(line, sizeof(line), file) != NULL)
     {
         if (strstr(line, "}")) // Check for the end of the entities section
@@ -236,13 +236,13 @@ simple_vector load_primitive_map_entitys(FILE *file)
                     // Handle parsing failure if needed
                 }
             }
-            else if (is_map_propriety(line))
+            if (is_map_propriety(line) && skipAditionalInfo > 0)
             {
                 MapPropriety *prop = read_map_propriety(line);
                 if (prop)
                 {
                     entity->aditionalInfo.data = realloc(entity->aditionalInfo.data, sizeof(MapPropriety *) * (entity->aditionalInfo.size + 1));
-                    entity->aditionalInfo.data[entity->aditionalInfo.size++] = prop;
+                    entity->aditionalInfo.data[entity->aditionalInfo.size++] = prop;   
                 }
             }
 
@@ -251,7 +251,13 @@ simple_vector load_primitive_map_entitys(FILE *file)
             {
                 if (strstr(line, "}")) // Check for the end of the PrimitiveMapEntity
                 {
+                    skipAditionalInfo++;
                     break;
+                }
+
+                if (strstr(line, "{")) 
+                {
+                    skipAditionalInfo++;
                 }
 
                 // Check if it is an entity or a property
@@ -271,7 +277,7 @@ simple_vector load_primitive_map_entitys(FILE *file)
                             // Handle parsing failure if needed
                         }
                     }
-                    else if (is_map_propriety(line))
+                    if (is_map_propriety(line) && skipAditionalInfo > 0)
                     {
                         MapPropriety *prop = read_map_propriety(line);
                         if (prop)
@@ -286,6 +292,9 @@ simple_vector load_primitive_map_entitys(FILE *file)
             entities.data = realloc(entities.data, sizeof(PrimitiveMapEntity *) * (entities.size + 1));
             entities.data[entities.size++] = entity;
         }
+
+        
+        
     }
 
     return entities;
@@ -317,27 +326,75 @@ PrimitiveMap *load_primitive_map(const char *path)
     return ret;
 }
 
+void delete_primitive_entity(PrimitiveMapEntity *entity)
+{
+    // Libera a memória alocada para as primitivas
+    for (size_t i = 0; i < entity->primitives.size; ++i)
+    {
+        free(entity->primitives.data[i]);
+    }
+    free(entity->primitives.data);
+
+    // Libera a memória alocada para as informações adicionais
+    for (size_t i = 0; i < entity->aditionalInfo.size; ++i)
+    {
+        free(((MapPropriety*)entity->aditionalInfo.data[i])->key);
+        free(((MapPropriety*)entity->aditionalInfo.data[i])->data);
+        free(((MapPropriety*)entity->aditionalInfo.data[i]));
+    }
+    free(entity->aditionalInfo.data);
+
+    // Libera a memória alocada para a própria entidade
+    free(entity);
+}
+
 void delete_primitive_map(PrimitiveMap *map)
 {
-    size_t i = 0;
-
-    i = 0;
-    while (i < map->entitys.size)
+    // Libera a memória alocada para as informações adicionais do mapa
+    for (size_t i = 0; i < map->aditionalInfo.size; ++i)
     {
-        free(map->entitys.data[i]);
-        i++;
-    }
-    free(map->entitys.data);
-
-    i = 0;
-    while (i < map->aditionalInfo.size)
-    {
+        free(((MapPropriety*)map->aditionalInfo.data[i])->key);
+        free(((MapPropriety*)map->aditionalInfo.data[i])->data);
         free(map->aditionalInfo.data[i]);
-        i++;
     }
     free(map->aditionalInfo.data);
 
+    // Libera a memória alocada para as entidades do mapa
+    for (size_t i = 0; i < map->entitys.size; ++i)
+    {
+        delete_primitive_entity(map->entitys.data[i]);
+    }
+    free(map->entitys.data);
+
+    // Libera a memória alocada para o próprio mapa
     free(map);
+}
+
+void print_components(unsigned char spaces,simple_vector components){
+    for(size_t i = 0 ; i < components.size;i++){
+        for (size_t a = 0; a < spaces; a++)
+        {
+            printf("    ");
+        }
+        printf("key: %s value: %s\n",((MapPropriety*)components.data[i])->key,((MapPropriety*)components.data[i])->data);
+    }
+}
+
+void print_primitives(unsigned char spaces,simple_vector components){
+    for(size_t i = 0 ; i < components.size;i++){
+        for (size_t a = 0; a < spaces; a++)
+        {
+            printf("    ");
+        }
+        PrimitiveMapStructurePrimitive * primitive = (PrimitiveMapStructurePrimitive*)components.data[i];
+        printf("( %d %d %d ) ( %d %d %d ) ( %d %d %d ) %s %d %d %d %d %d\n",
+                        primitive->positions[0].x, primitive->positions[0].y, primitive->positions[0].z,
+                        primitive->positions[1].x, primitive->positions[1].y, primitive->positions[1].z,
+                        primitive->positions[2].x, primitive->positions[2].y, primitive->positions[2].z,
+                        primitive->texture,
+                        primitive->textureCord.offsetX, primitive->textureCord.offsetY,
+                        primitive->textureCord.rotation, primitive->textureCord.scaleX, primitive->textureCord.scaleY);
+    }
 }
 
 void print_primitive_map_content(PrimitiveMap *map)
@@ -346,12 +403,8 @@ void print_primitive_map_content(PrimitiveMap *map)
 
     size_t i = 0;
 
-    while (i < map->aditionalInfo.size)
-    {
-        MapPropriety *prop = map->aditionalInfo.data[i];
-        printf("    key: %s data: %s \n", prop->key, prop->data);
-        i++;
-    }
+    
+    print_components(1,map->aditionalInfo);
 
     printf("    entity size: %d\n", map->entitys.size);
 
@@ -361,7 +414,11 @@ void print_primitive_map_content(PrimitiveMap *map)
     i = 0;
     while (i < map->entitys.size)
     {
-        
+        PrimitiveMapEntity *ent = map->entitys.data[i];
+        printf("        {\n");
+        print_components(3,ent->aditionalInfo);
+        print_primitives(3,ent->primitives);
+        printf("        }\n");
         
         i++;
     }
