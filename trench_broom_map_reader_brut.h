@@ -256,6 +256,7 @@ simple_vector load_primitive_map_entitys(FILE *file)
                     {
                         entity->aditionalInfo.data = realloc(entity->aditionalInfo.data, sizeof(MapPropriety *) * (entity->aditionalInfo.size + 1));
                         entity->aditionalInfo.data[entity->aditionalInfo.size++] = prop;
+                        
                     }
                 }
             }
