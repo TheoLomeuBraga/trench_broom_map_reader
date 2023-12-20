@@ -64,7 +64,28 @@ typedef struct
 } PrimitiveMap;
 
 
+MapPropriety *read_map_propriety(const char *data)
+{
+    MapPropriety *propriety = malloc(sizeof(MapPropriety));
+    if (!propriety)
+    {
+        // Handle memory allocation failure
+        fprintf(stderr, "Error allocating memory for MapPropriety\n");
+        return NULL;
+    }
 
+    // Attempt to decode the input string
+    int parsed = sscanf(data, "\"%255[^\"]\" \"%255[^\"]\"", propriety->key, propriety->data);
+
+    if (parsed != 2)
+    {
+        // If parsing is unsuccessful, free allocated memory and return NULL
+        free(propriety);
+        return NULL;
+    }
+
+    return propriety;
+}
 
 simple_vector load_primitive_map_aditionalInfo(FILE *file)
 {
@@ -111,7 +132,40 @@ simple_vector load_primitive_map_aditionalInfo(FILE *file)
     return aditionalInfo;
 }
 
-simple_vector load_primitive_map_entitys(FILE *file) {
+
+PrimitiveMapStructurePrimitive *read_primitive_map_propriety(const char *data)
+{
+    PrimitiveMapStructurePrimitive *primitive = malloc(sizeof(PrimitiveMapStructurePrimitive));
+    if (!primitive)
+    {
+        // Handle memory allocation failure
+        fprintf(stderr, "Error allocating memory for PrimitiveMapStructurePrimitive\n");
+        return NULL;
+    }
+
+    // Attempt to decode the input string
+    int parsed = sscanf(data, " ( %d %d %d ) ( %d %d %d ) ( %d %d %d ) %s %d %d %d %d %d",
+                        &primitive->positions[0].x, &primitive->positions[0].y, &primitive->positions[0].z,
+                        &primitive->positions[1].x, &primitive->positions[1].y, &primitive->positions[1].z,
+                        &primitive->positions[2].x, &primitive->positions[2].y, &primitive->positions[2].z,
+                        primitive->texture,
+                        &primitive->textureCord.offsetX, &primitive->textureCord.offsetY,
+                        &primitive->textureCord.rotation, &primitive->textureCord.scaleX, &primitive->textureCord.scaleY);
+
+    if (parsed != 15)
+    {
+        // If parsing is unsuccessful, free allocated memory and return NULL
+        free(primitive);
+        return NULL;
+    }
+
+    return primitive;
+}
+
+
+
+simple_vector load_primitive_map_entitys(FILE *file)
+{
     simple_vector entities;
     entities.data = NULL;
     entities.size = 0;
@@ -120,6 +174,8 @@ simple_vector load_primitive_map_entitys(FILE *file) {
 
     return entities;
 }
+
+
 
 PrimitiveMap *load_primitive_map(const char *path)
 {
@@ -172,7 +228,7 @@ void print_primitive_map_content(PrimitiveMap *map)
 
     
 
-    i = 0;
+    
     while (i < map->aditionalInfo.size)
     {
         MapPropriety *prop = map->aditionalInfo.data[i];
@@ -180,6 +236,9 @@ void print_primitive_map_content(PrimitiveMap *map)
         i++;
     }
     printf("    }\n");
+
+    i = 0;
+    printf("    entity size: %d\n",map->entitys.size);
 
     printf("}\n");
 }
